@@ -1,0 +1,381 @@
+---
+import { Image } from 'astro:assets';
+import type { BookEntry } from '../lib/books';
+
+interface Props {
+  year: number;
+  books: BookEntry[];
+  previewLimit: number;
+  reserveOverflowSlot?: boolean;
+  variant?: 'home' | 'index';
+  allLabel?: string;
+}
+
+const {
+  year,
+  books,
+  previewLimit,
+  reserveOverflowSlot = false,
+  variant = 'home',
+  allLabel = '这一年的全部 →',
+} = Astro.props;
+
+const hasOverflow = books.length > previewLimit;
+const previewBooks = hasOverflow && reserveOverflowSlot
+  ? books.slice(0, previewLimit - 1)
+  : books.slice(0, previewLimit);
+const overflow = books.length - previewBooks.length;
+const base = import.meta.env.BASE_URL;
+const miniImageWidths = [110, 220];
+const miniImageSizes = variant === 'index' ? '110px' : '100px';
+---
+
+<article class={`year-row year-row--${variant}`}>
+  <header class="year-row-head">
+    <a href={`${base}year/${year}`} class="year-row-num-link">
+      <span class="year-row-num">{year}</span>
+    </a>
+    <span class="year-row-count">
+      共 <span class="nums">{books.length}</span> 本
+    </span>
+  </header>
+
+  <div class="year-row-books">
+    {previewBooks.map((book) => (
+      <a href={`${base}book/${book.id}`} class="mini-book" title={book.data.title}>
+        <div class="mini-cover">
+          {book.data.coverImage ? (
+            <Image
+              src={book.data.coverImage}
+              alt={`${book.data.title} 封面`}
+              widths={miniImageWidths}
+              sizes={miniImageSizes}
+              class="mini-cover-img"
+              loading="lazy"
+            />
+          ) : (
+            <>
+              <span class="mini-title">{book.data.title}</span>
+              {book.data.titleEn && (
+                <span class="mini-title-en">{book.data.titleEn}</span>
+              )}
+            </>
+          )}
+        </div>
+        {book.data.verdict === '会推' && (
+          <span class="mini-verdict" aria-label="会推">·</span>
+        )}
+      </a>
+    ))}
+    {overflow > 0 && (
+      <a href={`${base}year/${year}`} class="mini-more" aria-label={`查看 ${year} 年的另 ${overflow} 本`}>
+        <span class="mini-more-plus">+<span class="nums">{overflow}</span></span>
+        <span class="mini-more-hint">还有</span>
+      </a>
+    )}
+  </div>
+
+  <footer class="year-row-foot">
+    <a href={`${base}year/${year}`} class="year-row-all">
+      {variant === 'index' ? (
+        <>进入 <span class="nums">{year}</span> 年 →</>
+      ) : allLabel}
+    </a>
+  </footer>
+</article>
+
+<style>
+  .year-row {
+    position: relative;
+  }
+  .year-row + .year-row::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 44px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--line), transparent);
+  }
+  .year-row--home + .year-row--home::before { top: -1.6rem; }
+  .year-row--index + .year-row--index::before { top: -2.1rem; }
+
+  .year-row-head {
+    display: flex;
+    align-items: baseline;
+    gap: 1.2rem;
+    margin-bottom: 1.4rem;
+  }
+  .year-row-num-link { text-decoration: none; }
+  .year-row-num {
+    font-family: var(--font-en-decor);
+    font-weight: 500;
+    font-feature-settings: "onum" 1;
+    color: var(--ink);
+    letter-spacing: 0.04em;
+    line-height: 1;
+    transition: color 200ms ease;
+  }
+  .year-row--home .year-row-num { font-size: 3rem; }
+  .year-row--index .year-row-num { font-size: 3.2rem; }
+  .year-row-num-link:hover .year-row-num {
+    color: var(--accent-dawn);
+  }
+  .year-row-count {
+    font-family: var(--font-cn-title);
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    letter-spacing: 0.2em;
+  }
+  .year-row-count .nums {
+    font-family: var(--font-en);
+    font-feature-settings: "onum" 1;
+    color: var(--accent-mist);
+    margin: 0 0.15em;
+  }
+
+  .year-row-books {
+    gap: 1rem;
+    padding-left: 0.3rem;
+  }
+  .year-row--home .year-row-books {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow: hidden;
+    padding-top: 10px;
+    margin-top: -10px;
+  }
+  .year-row--index .year-row-books {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 110px);
+  }
+
+  .mini-book {
+    display: block;
+    position: relative;
+    text-decoration: none;
+    color: var(--ink);
+  }
+  .year-row--home .mini-book {
+    width: 100px;
+    padding: 5px 5px 9px;
+    background: linear-gradient(180deg, #FBF7ED 0%, var(--bg) 100%);
+    border: 1px solid var(--line);
+    border-radius: 1.5px;
+    box-shadow:
+      0 1px 0 rgba(30, 27, 24, 0.04),
+      0 6px 14px -8px rgba(30, 27, 24, 0.18),
+      0 2px 5px -2px rgba(193, 74, 58, 0.05),
+      inset 1px 0 0 rgba(255, 255, 255, 0.5);
+    transition: transform 280ms ease, box-shadow 280ms ease;
+  }
+  .year-row--index .mini-book {
+    width: 110px;
+    transition: transform 250ms ease;
+  }
+  .mini-book:hover {
+    transform: translateY(-3px);
+  }
+  .year-row--home .mini-book:hover {
+    box-shadow:
+      0 1px 0 rgba(30, 27, 24, 0.04),
+      0 14px 26px -10px rgba(30, 27, 24, 0.26),
+      0 5px 12px -4px rgba(193, 74, 58, 0.12);
+  }
+
+  .mini-cover {
+    aspect-ratio: 3 / 4;
+    background:
+      radial-gradient(140% 60% at 50% 0%, rgba(193, 74, 58, 0.08), transparent 55%),
+      linear-gradient(180deg, var(--bg-soft) 0%, var(--bg) 100%);
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .year-row--home .mini-cover {
+    box-shadow:
+      inset 0 0 0 1px rgba(30, 27, 24, 0.05),
+      inset 0 1px 2px rgba(30, 27, 24, 0.05);
+  }
+  .year-row--index .mini-cover {
+    border: 1px solid var(--line);
+    box-shadow:
+      0 1px 0 rgba(30, 27, 24, 0.05),
+      0 5px 14px -8px rgba(30, 27, 24, 0.18),
+      -1px 0 0 rgba(255, 255, 255, 0.35) inset;
+    transition: box-shadow 250ms ease;
+  }
+  .year-row--index .mini-book:hover .mini-cover {
+    box-shadow:
+      0 1px 0 rgba(30, 27, 24, 0.05),
+      0 10px 20px -8px rgba(30, 27, 24, 0.28);
+  }
+  .mini-cover :global(.mini-cover-img) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .year-row--home .mini-cover :global(.mini-cover-img) {
+    filter: saturate(0.92) contrast(0.97) brightness(1.01);
+    transition: filter 280ms ease;
+  }
+  .year-row--home .mini-book:hover .mini-cover :global(.mini-cover-img) {
+    filter: saturate(1) contrast(1) brightness(1.02);
+  }
+  .mini-title {
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    font-family: var(--font-cn-brush);
+    font-weight: 400;
+    letter-spacing: 0.16em;
+    color: var(--ink);
+    line-height: 1.1;
+  }
+  .year-row--home .mini-title { font-size: 0.95rem; }
+  .year-row--index .mini-title { font-size: 1rem; }
+  .mini-title-en {
+    position: absolute;
+    bottom: 0.4rem;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-family: var(--font-en);
+    font-style: italic;
+    font-feature-settings: "onum" 1;
+    color: var(--ink-soft);
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 0.3rem;
+  }
+  .year-row--home .mini-title-en { font-size: 0.6rem; }
+  .year-row--index .mini-title-en { font-size: 0.62rem; }
+
+  .mini-verdict {
+    position: absolute;
+    border-radius: 50%;
+    color: transparent;
+    pointer-events: none;
+  }
+  .year-row--home .mini-verdict {
+    top: -7px;
+    right: -7px;
+    width: 18px;
+    height: 18px;
+    background:
+      radial-gradient(circle at 50% 50%,
+        #C14A3A 0%,
+        #C14A3A 22%,
+        rgba(193, 74, 58, 0.55) 34%,
+        rgba(242, 200, 160, 0.55) 58%,
+        rgba(242, 200, 160, 0) 100%
+      );
+    filter: drop-shadow(0 1px 3px rgba(193, 74, 58, 0.35));
+    transition: transform 280ms ease, filter 280ms ease;
+  }
+  .year-row--home .mini-book:hover .mini-verdict {
+    transform: scale(1.08);
+    filter: drop-shadow(0 1px 5px rgba(193, 74, 58, 0.5));
+  }
+  .year-row--index .mini-verdict {
+    top: -4px;
+    right: -4px;
+    width: 10px;
+    height: 10px;
+    background: var(--accent-dawn);
+    box-shadow: 0 1px 3px rgba(193, 74, 58, 0.3);
+  }
+
+  .mini-more {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 3 / 4;
+    border: 1px dashed var(--line);
+    color: var(--ink-soft);
+    gap: 0.25rem;
+    text-decoration: none;
+  }
+  .year-row--home .mini-more {
+    width: 100px;
+    border-radius: 1.5px;
+    background: rgba(250, 246, 236, 0.35);
+    transition: border-color 220ms ease, color 220ms ease, background 220ms ease, transform 220ms ease;
+  }
+  .year-row--index .mini-more {
+    width: 100%;
+    background: transparent;
+    transition: border-color 200ms ease, color 200ms ease, background 200ms ease;
+  }
+  .mini-more:hover {
+    border-color: var(--accent-dawn);
+    border-style: solid;
+    color: var(--accent-dawn);
+    background: rgba(193, 74, 58, 0.04);
+  }
+  .year-row--home .mini-more:hover {
+    transform: translateY(-2px);
+  }
+  .mini-more-plus {
+    font-family: var(--font-en-decor);
+    font-weight: 500;
+    font-size: 1.8rem;
+    line-height: 1;
+  }
+  .mini-more-plus .nums {
+    font-family: var(--font-en);
+    font-feature-settings: "onum" 1;
+  }
+  .mini-more-hint {
+    font-family: var(--font-cn-title);
+    font-size: 0.72rem;
+    letter-spacing: 0.24em;
+  }
+
+  .year-row-foot {
+    margin-top: 1rem;
+    padding-left: 0.3rem;
+  }
+  .year-row-all {
+    font-family: var(--font-cn-title);
+    color: var(--accent-mist);
+    transition: color 200ms ease;
+  }
+  .year-row--home .year-row-all {
+    font-size: 0.85rem;
+    letter-spacing: 0.12em;
+  }
+  .year-row--index .year-row-all {
+    font-size: 0.9rem;
+    letter-spacing: 0.14em;
+  }
+  .year-row-all:hover {
+    color: var(--accent-dawn);
+  }
+  .year-row-all .nums {
+    font-family: var(--font-en);
+    font-feature-settings: "onum" 1;
+    margin: 0 0.15em;
+  }
+
+  @media (max-width: 640px) {
+    .year-row-num { font-size: 2.4rem; }
+    .year-row--home .mini-book,
+    .year-row--home .mini-more {
+      width: 80px;
+    }
+    .year-row--home .mini-title { font-size: 0.85rem; }
+    .year-row--index .year-row-books { grid-template-columns: repeat(auto-fill, 86px); }
+    .year-row--index .mini-title { font-size: 0.88rem; }
+  }
+</style>

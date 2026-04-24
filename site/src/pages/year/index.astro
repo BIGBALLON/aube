@@ -1,0 +1,120 @@
+---
+/**
+ * /year · 按年浏览 · 索引页
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Yuwei from '../../components/Yuwei.astro';
+import YearRiverRow from '../../components/YearRiverRow.astro';
+import { getPublishedBooks, getReadYearEntries } from '../../lib/books';
+
+const allBooks = await getPublishedBooks();
+const years = getReadYearEntries(allBooks, 'desc');
+
+// 每行最多展示前 N 本，其余用 +N 还有 卡表示
+const PREVIEW_LIMIT = 24;
+const totalBooks = allBooks.length;
+---
+
+<BaseLayout title="按年浏览" category="按年" wide>
+  <article class="years-page">
+    <header class="head">
+      <h1 class="title">年份</h1>
+      <p class="lead">一年一条书的河 <span class="sep">·</span> 点年份进当年的页面</p>
+      <p class="stat">
+        共 <span class="nums">{years.length}</span> 年
+        <span class="sep">·</span>
+        共 <span class="nums">{totalBooks}</span> 本
+      </p>
+    </header>
+
+    <Yuwei />
+
+    {years.length === 0 ? (
+      <p class="empty">第一年还没攒够书。等等再来。</p>
+    ) : (
+      <div class="year-rows">
+        {years.map(([year, yearBooks]) => (
+          <YearRiverRow
+            year={year}
+            books={yearBooks}
+            previewLimit={PREVIEW_LIMIT}
+            variant="index"
+          />
+        ))}
+      </div>
+    )}
+  </article>
+</BaseLayout>
+
+<style>
+  .years-page { max-width: 900px; margin: 0 auto; }
+
+  /* 卷首 */
+  .head {
+    text-align: center;
+    padding: 1.6rem 0 0.4rem;
+  }
+  .eyebrow {
+    font-family: var(--font-cn-title);
+    font-size: 0.74rem;
+    letter-spacing: 0.32em;
+    color: var(--accent-mist);
+    margin: 0 0 0.9rem;
+    text-transform: uppercase;
+  }
+  .eyebrow .en {
+    font-family: var(--font-en);
+    font-style: italic;
+    letter-spacing: 0.08em;
+  }
+  .title {
+    font-family: var(--font-cn-brush);
+    font-weight: 400;
+    font-size: 2.6rem;
+    margin: 0 0 0.6rem;
+    letter-spacing: 0.24em;
+    color: var(--ink);
+  }
+  .lead {
+    color: var(--ink-soft);
+    font-family: var(--font-cn-kai);
+    font-size: 1rem;
+    letter-spacing: 0.08em;
+    margin: 0 0 0.6rem;
+  }
+  .lead .sep,
+  .stat .sep {
+    color: var(--accent-dawn);
+    opacity: 0.55;
+    margin: 0 0.3em;
+  }
+  .stat {
+    font-family: var(--font-cn-title);
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    letter-spacing: 0.18em;
+    margin: 0;
+  }
+  .stat .nums {
+    font-family: var(--font-en);
+    font-feature-settings: "onum" 1;
+    color: var(--accent-mist);
+    margin: 0 0.15em;
+  }
+
+  /* 年份河流（与首页同款，但更舒展） */
+  .year-rows {
+    margin: 2rem 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4rem;
+  }
+
+  .empty {
+    padding: 3rem 2rem;
+    text-align: center;
+    color: var(--ink-soft);
+    font-style: italic;
+    font-family: var(--font-cn-kai);
+  }
+</style>

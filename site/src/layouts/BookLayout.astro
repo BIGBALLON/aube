@@ -1,0 +1,398 @@
+---
+/**
+ * 单书页布局（1080px · 三栏书头）
+ *
+ * 结构：
+ *   书头（三栏并列）：封面 | 书信息 | 8 维度雷达图
+ *   → 鱼尾
+ *   → 正文 MDX（作者主观散文）
+ *   → Aube 的反应（如读过）
+ *   → 鱼尾
+ *   → 本页信息
+ *
+ */
+import BaseLayout from './BaseLayout.astro';
+import RadarChart from '../components/RadarChart.astro';
+import AubeReaction from '../components/AubeReaction.astro';
+import Yuwei from '../components/Yuwei.astro';
+import Seal from '../components/Seal.astro';
+import { Image } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  book: CollectionEntry<'books'>;
+}
+const { book } = Astro.props;
+const {
+  title, titleEn, author, translator, publisher, publishYear, originYear,
+  themes, series,
+  readByAube, readAtYear, aubeReaction,
+  scores, verdict, oneLiner,
+  lastUpdated, firstPublished,
+  coverImage,
+} = book.data;
+
+const verdictClass =
+  verdict === '会推' ? 'verdict-yes' :
+  verdict === '看情况' ? 'verdict-maybe' : 'verdict-no';
+
+const fmt = (d: Date) => d.toISOString().slice(0, 10);
+const base = import.meta.env.BASE_URL;
+---
+
+<BaseLayout title={title} description={oneLiner} wide>
+  <article class="book">
+    <!-- 书头：封面 | 书信息 | 雷达图 -->
+    <header class="book-head">
+      <div class="cover-wrap">
+        <div class="cover">
+          <div class={`cover-window ${coverImage ? 'cover-window--image' : ''}`}>
+            {coverImage ? (
+              <Image
+                src={coverImage}
+                alt={`${title} 封面`}
+                widths={[220, 440]}
+                sizes="(max-width: 640px) 220px, 170px"
+                class="cover-img"
+                loading="eager"
+              />
+            ) : (
+              <>
+                <div class="cover-title-v">{title}</div>
+                {titleEn && <div class="cover-title-en">{titleEn}</div>}
+              </>
+            )}
+          </div>
+          <div class="cover-seal"><Seal variant="aube" size={42} id={`book-cover-${book.id}`} /></div>
+        </div>
+      </div>
+
+      <div class="head-meta">
+        <p class="eyebrow"><span class="nums">{publishYear}</span>{originYear && originYear !== publishYear && <> · 原版 <span class="nums">{originYear}</span></>}</p>
+        <h1 class="title">{title}</h1>
+        {titleEn && <p class="title-en">{titleEn}</p>}
+        <dl class="facts">
+          <div><dt>作者</dt><dd>{author}</dd></div>
+          {translator && <div><dt>译者</dt><dd>{translator}</dd></div>}
+          <div><dt>出版</dt><dd>{publisher}</dd></div>
+          {series && <div><dt>系列</dt><dd><a href={`${base}series/${series}`}>{series}</a></dd></div>}
+        </dl>
+        <p class="one-liner"><span class={`verdict ${verdictClass}`}>{verdict}</span><span class="one-liner-text">{oneLiner}</span></p>
+        {themes.length > 0 && (
+          <div class="themes">
+            {themes.map((t) => <a href={`${base}theme/${t}`} class="tag">{t}</a>)}
+          </div>
+        )}
+      </div>
+
+      <aside class="score-aside">
+        <RadarChart scores={scores} size={300} id={`book-score-${book.id}`} />
+      </aside>
+    </header>
+
+    <Yuwei />
+
+    <!-- 正文 MDX：TL;DR + 我怎么看 + 读前 / 反对 / 如何读 + 变更日志 -->
+    <section class="prose book-prose">
+      <slot />
+    </section>
+
+    <!-- Aube 反应板块（仅当她读过；页面不显示年龄） -->
+    {readByAube && aubeReaction && (
+      <div class="aube-wrap">
+        <AubeReaction reaction={aubeReaction} sealId={`book-reaction-${book.id}`} />
+      </div>
+    )}
+
+    <Yuwei />
+
+    <!-- 本页信息 -->
+    <footer class="book-foot">
+      <dl class="foot-facts">
+        <div><dt>首次发布</dt><dd class="nums">{fmt(firstPublished)}</dd></div>
+        <div><dt>最后更新</dt><dd class="nums">{fmt(lastUpdated)}</dd></div>
+        {readByAube && readAtYear !== undefined && (
+          <div><dt>Aube 读于</dt><dd class="nums">{readAtYear}</dd></div>
+        )}
+      </dl>
+      <p class="disclosure">
+        勘误与建议 → <a href="https://github.com/BIGBALLON/aube/issues" target="_blank" rel="noopener">GitHub issues</a>
+      </p>
+      <div class="foot-seal"><Seal variant="aube" size={52} id={`book-foot-${book.id}`} /></div>
+    </footer>
+  </article>
+</BaseLayout>
+
+<style>
+  .book { max-width: 1080px; margin: 0 auto; }
+
+  /* 书头 · 三栏：封面 170px | 信息 flex | 雷达 320px */
+  .book-head {
+    display: grid;
+    grid-template-columns: 170px minmax(0, 1fr) 320px;
+    gap: 2rem;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .cover-wrap { position: relative; }
+  /* 详情页大封面：.cover 外层纸托 / .cover-window 3:4 图窗 */
+  .cover {
+    position: relative;
+    padding: 9px 9px 14px;
+    background: linear-gradient(180deg, #FBF7ED 0%, var(--bg) 100%);
+    border: 1px solid var(--line);
+    border-radius: 1.5px;
+    box-shadow:
+      0 1px 0 rgba(30, 27, 24, 0.05),
+      0 14px 28px -14px rgba(30, 27, 24, 0.28),
+      0 4px 10px -4px rgba(193, 74, 58, 0.07),
+      inset 1px 0 0 rgba(255, 255, 255, 0.5);
+    transition: transform 300ms ease, box-shadow 300ms ease;
+  }
+  .cover:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 1px 0 rgba(30, 27, 24, 0.05),
+      0 22px 38px -14px rgba(30, 27, 24, 0.32),
+      0 8px 16px -6px rgba(193, 74, 58, 0.14);
+  }
+  .cover-window {
+    position: relative;
+    aspect-ratio: 3 / 4;
+    overflow: hidden;
+    background:
+      radial-gradient(140% 60% at 50% 0%, rgba(193, 74, 58, 0.08), transparent 55%),
+      linear-gradient(180deg, var(--bg-soft) 0%, var(--bg) 100%);
+    box-shadow:
+      inset 0 0 0 1px rgba(30, 27, 24, 0.05),
+      inset 0 1px 2px rgba(30, 27, 24, 0.06);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0.9rem;
+  }
+  .cover-window--image::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(180deg, rgba(251, 247, 237, 0.16), rgba(251, 247, 237, 0.04) 42%, rgba(30, 27, 24, 0.06)),
+      repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 4px);
+    box-shadow:
+      inset 0 0 0 1px rgba(251, 247, 237, 0.22),
+      inset 0 0 22px rgba(251, 247, 237, 0.12);
+  }
+  .cover-window :global(.cover-img) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    transform: scale(0.98);
+    filter: saturate(0.9) contrast(0.96) brightness(1.03);
+    transition: filter 300ms ease, transform 300ms ease;
+  }
+  .cover:hover .cover-window :global(.cover-img) {
+    transform: scale(1);
+    filter: saturate(0.98) contrast(0.99) brightness(1.03);
+  }
+  .cover-title-v {
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    font-family: var(--font-cn-brush);
+    font-weight: 400;
+    font-size: 1.7rem;
+    letter-spacing: 0.22em;
+    color: var(--ink);
+  }
+  .cover-title-en {
+    position: absolute;
+    bottom: 0.55rem;
+    left: 0; right: 0;
+    text-align: center;
+    font-family: var(--font-en);
+    font-style: italic;
+    font-feature-settings: "onum" 1;
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    letter-spacing: 0.04em;
+  }
+  .cover-seal {
+    position: absolute;
+    right: -10px;
+    bottom: -10px;
+  }
+
+  /* 书信息栏 */
+  .head-meta .eyebrow {
+    font-family: var(--font-cn-title);
+    font-size: 0.72rem;
+    letter-spacing: 0.32em;
+    color: var(--accent-mist);
+    margin: 0.4rem 0 0.5rem;
+    text-transform: uppercase;
+  }
+  .head-meta .eyebrow .nums {
+    font-family: var(--font-en);
+    font-feature-settings: "onum" 1;
+    letter-spacing: 0.05em;
+  }
+  .head-meta .title {
+    font-family: var(--font-cn-brush);
+    font-size: 2.5rem;
+    font-weight: 400;
+    margin: 0;
+    letter-spacing: 0.08em;
+    line-height: 1.2;
+    color: var(--ink);
+  }
+  .head-meta .title-en {
+    font-family: var(--font-en);
+    font-style: italic;
+    font-weight: 400;
+    font-feature-settings: "onum" 1, "liga" 1, "dlig" 1;
+    font-size: 1rem;
+    color: var(--ink-soft);
+    margin: 0.3rem 0 1rem;
+    letter-spacing: 0.05em;
+  }
+
+  .facts {
+    margin: 0.9rem 0 1.1rem;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.3rem;
+    font-size: 0.86rem;
+  }
+  .facts > div { display: grid; grid-template-columns: 4em 1fr; gap: 0.8rem; }
+  .facts dt {
+    color: var(--ink-soft);
+    letter-spacing: 0.2em;
+    font-size: 0.7rem;
+    font-family: var(--font-cn-title);
+    padding-top: 0.2em;
+  }
+  .facts dd { margin: 0; color: var(--ink); }
+  .facts .nums {
+    font-family: var(--font-en);
+    font-feature-settings: "onum" 1;
+    letter-spacing: 0.03em;
+  }
+
+  .one-liner {
+    font-family: var(--font-cn-kai);
+    font-size: 1.04rem;
+    line-height: 1.7;
+    color: var(--ink);
+    margin: 0.8rem 0;
+    display: flex;
+    align-items: baseline;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+    letter-spacing: 0.02em;
+  }
+  .one-liner-text {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .themes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.8rem;
+  }
+
+  /* 右侧：评分雷达图。左侧一条极淡竖线，把雷达图与书信息隔开 */
+  .score-aside {
+    text-align: center;
+    border-left: 1px solid var(--line);
+    padding-left: 1.6rem;
+    margin-left: -0.4rem;
+  }
+
+  /* 正文 prose 拉满 1080px，与书头左右齐平 */
+  .book-prose {
+    margin: 1.4rem auto;
+    max-width: 100%;
+  }
+
+  .aube-wrap {
+    max-width: 100%;
+    margin: 0 auto;
+  }
+
+  /* 本页信息 */
+  .book-foot {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 1.8rem 0 0;
+    position: relative;
+  }
+  .foot-facts {
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    gap: 0.8rem 2.6rem;
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    margin: 0 0 1rem;
+  }
+  .foot-facts > div { display: flex; flex-direction: column; gap: 0.15rem; }
+  .foot-facts dt {
+    font-family: var(--font-cn-title);
+    font-size: 0.68rem;
+    letter-spacing: 0.22em;
+    color: var(--ink-soft);
+    opacity: 0.7;
+  }
+  .foot-facts dd {
+    margin: 0;
+    color: var(--ink);
+    font-family: var(--font-en);
+    font-feature-settings: "onum" 1;
+    font-size: 0.92rem;
+    letter-spacing: 0.02em;
+  }
+  .disclosure {
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    font-style: italic;
+    margin: 0.8rem 0 1rem;
+    max-width: 520px;
+  }
+  .foot-seal {
+    position: absolute;
+    right: 0;
+    bottom: 0.2rem;
+  }
+
+  /* 中屏：雷达图移到书信息下面，书头两栏 */
+  @media (max-width: 1000px) {
+    .book-head {
+      grid-template-columns: 180px minmax(0, 1fr);
+      gap: 2rem;
+    }
+    .score-aside {
+      grid-column: 1 / -1;
+      border-left: none;
+      border-top: 1px solid var(--line);
+      padding: 1.2rem 0 0;
+      margin: 1rem 0 0;
+      text-align: center;
+    }
+    .score-aside :global(.radar-wrap) { margin-top: 0.3rem; }
+  }
+
+  /* 小屏：单栏垂直堆叠 */
+  @media (max-width: 640px) {
+    .book-head { grid-template-columns: 1fr; gap: 1.4rem; }
+    .cover-wrap { max-width: 220px; }
+    .head-meta .title { font-size: 1.8rem; }
+    .foot-facts { grid-template-columns: 1fr 1fr; gap: 0.6rem 1rem; }
+    .foot-seal { position: static; text-align: right; margin-top: 0.8rem; }
+  }
+</style>

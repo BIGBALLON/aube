@@ -1,0 +1,270 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Yuwei from '../components/Yuwei.astro';
+import BookCard from '../components/BookCard.astro';
+import Seal from '../components/Seal.astro';
+import DawnRidge from '../components/DawnRidge.astro';
+import YearRiverRow from '../components/YearRiverRow.astro';
+import { byFirstPublishedDesc, getPublishedBooks, getReadYearEntries } from '../lib/books';
+
+const allBooks = await getPublishedBooks();
+const sorted = [...allBooks].sort(byFirstPublishedDesc);
+const latest = sorted.slice(0, 3);
+const years = getReadYearEntries(allBooks, 'desc');
+
+// 首页每年只显示一行：最多 MAX_ROW 本；若有溢出卡，再少占一格
+const MAX_ROW = 5;
+const base = import.meta.env.BASE_URL;
+---
+
+<BaseLayout title="aube · 破晓" wide>
+  <!-- Hero · 破晓：远山作底景，文字浮前景 -->
+  <section class="hero">
+    <div class="hero-backdrop" aria-hidden="true">
+      <DawnRidge />
+    </div>
+
+    <div class="hero-inner">
+      <h1 class="brand">
+        <span class="brand-en">aube</span>
+        <span class="brand-dot"></span>
+        <span class="brand-cn">破晓</span>
+      </h1>
+      <span class="brand-underline" aria-hidden="true"></span>
+
+      <p class="tagline">一座可以长大的读书长廊</p>
+      <p class="sub">
+        也欢迎你，路过，翻一翻
+      </p>
+
+      <div class="hero-seal">
+        <Seal variant="aube" size={62} id="home-hero" />
+      </div>
+    </div>
+  </section>
+
+  <Yuwei />
+
+  <!-- 最近读过 -->
+  <section class="section">
+    <header class="section-head">
+      <p class="section-eyebrow"><span class="en">latest</span> · 最近读过</p>
+      <p class="section-sub">她读的 · 我们写的</p>
+    </header>
+    <div class="book-list">
+      {latest.length === 0 ? (
+        <p class="empty">这里还空着。第一本书正在写，很快就上。</p>
+      ) : latest.map((book) => (
+        <BookCard book={book} />
+      ))}
+    </div>
+  </section>
+
+  <Yuwei />
+
+  <!-- 按年浏览「一年一条书的河」：年份大字 + 横向封面小卡 + 查看全部 → -->
+  <section class="section year-river">
+    <header class="section-head">
+      <p class="section-eyebrow"><span class="en">by year</span> · 按年浏览</p>
+      <p class="section-sub">一年一条书的河</p>
+    </header>
+
+    {years.length === 0 ? (
+      <p class="empty">等第一年攒够了，就开一条书的河。</p>
+    ) : (
+      <div class="year-rows">
+        {years.map(([year, yearBooks]) => (
+          <YearRiverRow
+            year={year}
+            books={yearBooks}
+            previewLimit={MAX_ROW}
+            reserveOverflowSlot
+            variant="home"
+            allLabel="这一年的全部 →"
+          />
+        ))}
+      </div>
+    )}
+  </section>
+
+  <Yuwei />
+
+  <section class="section about-strip">
+    <p>
+      <a href={`${base}about`} class="more">关于 <span class="en">aube</span> →</a>
+    </p>
+  </section>
+</BaseLayout>
+
+<style>
+  /* Hero：文字堆叠在中央，远山 absolute 贴底。
+     印章位于文字底部，视觉上"落在远山前方"，像题款印盖在山水画上 */
+  .hero {
+    position: relative;
+    padding: 3.5rem 1.2rem 120px;
+    text-align: center;
+    overflow: hidden;
+  }
+
+  /* 远山底景：顶部用 mask-image 软化边界，让山"淡淡浮现" */
+  .hero-backdrop {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    z-index: 1;
+    -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 40%, #000 100%);
+    mask-image: linear-gradient(180deg, transparent 0%, #000 40%, #000 100%);
+  }
+  .hero-backdrop :global(.dawn-ridge) {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .hero-inner {
+    max-width: 640px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 2;
+  }
+
+  .brand {
+    font-weight: 400;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.9rem;
+    margin: 0.6rem 0 0;
+    line-height: 1;
+  }
+  .brand-en {
+    font-family: var(--font-en);
+    font-style: italic;
+    font-weight: 500;
+    font-feature-settings: "onum" 1, "liga" 1, "dlig" 1;
+    font-size: clamp(3.4rem, 8.2vw, 5.2rem);
+    letter-spacing: 0.05em;
+    color: var(--ink);
+  }
+  .brand-dot {
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: var(--accent-dawn);
+    display: inline-block;
+    transform: translateY(-0.45em);
+    box-shadow: 0 0 12px rgba(193, 74, 58, 0.35);
+  }
+  .brand-cn {
+    font-family: var(--font-cn-brush);
+    font-weight: 400;
+    font-size: clamp(2.2rem, 5.2vw, 3.1rem);
+    letter-spacing: 0.18em;
+    color: var(--ink);
+    padding-left: 0.22em;
+  }
+  /* 黎明时地平线上的那一道光 */
+  .brand-underline {
+    display: block;
+    width: 64px;
+    height: 2px;
+    margin: 1rem auto 0;
+    background: linear-gradient(90deg,
+      transparent 0%,
+      var(--accent-dawn) 50%,
+      transparent 100%
+    );
+    opacity: 0.75;
+  }
+
+  .tagline {
+    font-family: var(--font-cn-title);
+    font-weight: 700;
+    font-size: clamp(1.1rem, 2.4vw, 1.28rem);
+    color: var(--ink);
+    margin: 1.4rem 0 0.4rem;
+    letter-spacing: 0.18em;
+  }
+  .sub {
+    font-family: var(--font-cn-kai);
+    color: var(--ink-soft);
+    font-size: 0.98rem;
+    line-height: 2;
+    margin: 0.9rem 0 0;
+    letter-spacing: 0.04em;
+  }
+  .hero-seal {
+    margin-top: 2.4rem;
+    opacity: 0.95;
+  }
+
+  .section {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 1rem 1.2rem;
+  }
+  .section-head {
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+  .section-eyebrow {
+    font-family: var(--font-cn-title);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.32em;
+    color: var(--ink);
+    margin: 0 0 0.3rem;
+  }
+  .section-eyebrow .en {
+    font-family: var(--font-en);
+    font-style: italic;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    color: var(--accent-mist);
+  }
+  .section-sub {
+    font-family: var(--font-cn-kai);
+    font-size: 0.84rem;
+    color: var(--ink-soft);
+    font-style: italic;
+    letter-spacing: 0.16em;
+    margin: 0;
+  }
+
+  .book-list { margin-top: 0.5rem; }
+  .empty {
+    padding: 1.5rem 0;
+    color: var(--ink-soft);
+    font-style: italic;
+    text-align: center;
+    font-family: var(--font-cn-kai);
+  }
+
+  /* 按年浏览「一年一条书的河」 */
+  .year-rows {
+    margin: 2rem 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+  }
+
+  .about-strip {
+    text-align: center;
+    font-family: var(--font-cn-kai);
+    color: var(--ink-soft);
+    font-size: 0.96rem;
+    line-height: 2;
+    letter-spacing: 0.1em;
+  }
+  .about-strip .sep {
+    color: var(--accent-dawn);
+    opacity: 0.6;
+    margin: 0 0.4em;
+  }
+  .more { color: var(--accent-dawn); }
+
+  @media (max-width: 640px) {
+    .hero { padding-top: 2.2rem; }
+    .brand { gap: 0.6rem; }
+  }
+</style>

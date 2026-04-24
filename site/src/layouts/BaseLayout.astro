@@ -1,0 +1,92 @@
+---
+/* EB Garamond 和 Ma Shan Zheng 通过 Vite JS import 打包（文件小，首屏关键）
+   LXGW WenKai 通过 jsDelivr CDN <link> 加载，不打包进 dist，减少构建体积 */
+import '@fontsource-variable/eb-garamond/wght.css';
+import '@fontsource-variable/eb-garamond/wght-italic.css';
+import '@fontsource/ma-shan-zheng/chinese-simplified-400.css';
+
+import '../styles/global.css';
+import BookMei from '../components/BookMei.astro';
+import Footer from '../components/Footer.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** 当前页面在书眉上显示的分类 */
+  category?: string;
+  /** 是否让主内容铺满（首页用） · 默认 false，走单栏居中 */
+  wide?: boolean;
+}
+
+const {
+  title = 'aube · 破晓',
+  description = '一座给 Aube 的读书长廊。低频更新，质量优先。',
+  category,
+  wide = false,
+} = Astro.props;
+
+const fullTitle = title === 'aube · 破晓' ? title : `${title} · aube`;
+const canonical = new URL(Astro.url.pathname, Astro.site).toString();
+---
+
+<!doctype html>
+<html lang="zh-Hans">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#F7F2E8" />
+    <meta name="description" content={description} />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/lxgwwenkai-regular.css" />
+    <link rel="icon" type="image/svg+xml" href={`${import.meta.env.BASE_URL}favicon.svg`} />
+    <link rel="canonical" href={canonical} />
+    <title>{fullTitle}</title>
+
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+  </head>
+  <body>
+    <div class="page">
+      <header class="page-header">
+        <div class="header-inner">
+          <BookMei category={category} />
+        </div>
+      </header>
+
+      <main class={`page-main ${wide ? 'page-main--wide' : ''}`}>
+        <slot />
+      </main>
+
+      <Footer />
+    </div>
+
+    <style>
+      .page {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      .page-header {
+        border-bottom: 1px solid var(--line);
+      }
+      .header-inner {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 0 1.6rem;
+      }
+      .page-main {
+        flex: 1;
+        width: 100%;
+        max-width: 880px;
+        margin: 0 auto;
+        padding: 2.5rem 1.6rem 3rem;
+      }
+      .page-main--wide {
+        max-width: 1080px;
+      }
+    </style>
+  </body>
+</html>

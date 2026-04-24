@@ -1,0 +1,111 @@
+---
+/**
+ * /about · 极简版
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Yuwei from '../components/Yuwei.astro';
+import Seal from '../components/Seal.astro';
+---
+
+<BaseLayout title="关于 aube" category="关于">
+  <article class="prose about-page">
+    <header class="head">
+      <h1>关于</h1>
+      <p class="lead">一座可以长大的读书长廊 <span class="sep">·</span> 低频更新 <span class="sep">·</span> 质量优先</p>
+    </header>
+
+    <Yuwei />
+
+    <p class="first-para">
+      某一个午后，你随手翻开一本书。
+    </p>
+    <p>
+      窗外的光斜斜地落进来，落在那些还没来得及读的页面上。你不急着往下翻，只是停在某一行字里——那行字说的事，你从未经历，却觉得好像是自己写的。
+    </p>
+    <p>
+      书是奇怪的东西。搁在那里，什么也不做；拿起来，却悄悄把你带去从未去过的地方，见从未见过的人，感受从未以为自己会感受的事。
+    </p>
+    <p>
+      读完合上，书还是那本书。变了的，只有读书的人。
+    </p>
+    <p>
+      <span class="en">aube</span>，是这样一个地方。不是书单，不是评分，不是算法推来的「你可能喜欢」。只是一本一本，慢慢地读，慢慢地记下来。
+    </p>
+    <p>
+      如果你也走进来了，翻一翻——也许能找到一本想带走的书。
+    </p>
+
+    <h2>版权与反馈</h2>
+    <p>
+      本站所用书封面与内页图，为非营利教育性评论引用（《著作权法》§<span class="nums">24</span>）。
+      权利人若有疑义，<a href="https://github.com/BIGBALLON/aube/issues" target="_blank" rel="noopener">GitHub repo 开 issue</a> 标 <code>takedown</code>，立即下架。
+      看到错了、想建议新书，也在
+      <a href="https://github.com/BIGBALLON/aube/issues" target="_blank" rel="noopener">issues</a> 里说。
+      不做评论区，不发 newsletter，不装统计工具。
+    </p>
+
+    <Yuwei />
+
+  </article>
+</BaseLayout>
+
+<style>
+  .about-page { max-width: 820px; margin: 0 auto; }
+  .head { text-align: center; margin-bottom: 1rem; }
+  .eyebrow {
+    font-family: var(--font-cn-title);
+    font-size: 0.74rem;
+    letter-spacing: 0.34em;
+    color: var(--accent-mist);
+    margin: 0 0 0.9rem;
+    text-transform: uppercase;
+  }
+  .eyebrow .en {
+    font-family: var(--font-en);
+    font-style: italic;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+  }
+  .head h1 {
+    font-family: var(--font-cn-brush);
+    font-weight: 400;
+    font-size: 2.6rem;
+    margin: 0 0 0.6rem;
+    letter-spacing: 0.08em;
+  }
+  .lead {
+    color: var(--ink-soft);
+    font-family: var(--font-cn-kai);
+    font-size: 1rem;
+    letter-spacing: 0.08em;
+  }
+  .lead .sep {
+    color: var(--accent-dawn);
+    opacity: 0.55;
+    margin: 0 0.3em;
+  }
+  .first-para {
+    font-family: var(--font-cn-kai);
+    font-size: 1.02rem;
+    color: var(--ink);
+  }
+
+  .signature {
+    text-align: center;
+    margin: 2rem 0 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.9rem;
+    /* 金粉极微描边 · 仪式感 */
+    filter: drop-shadow(0 0 0.5px rgba(166, 139, 62, 0.4));
+  }
+  .signature p {
+    font-family: var(--font-en);
+    font-style: italic;
+    font-feature-settings: "onum" 1;
+    color: var(--ink-soft);
+    letter-spacing: 0.12em;
+    margin: 0;
+  }
+</style>

@@ -1,0 +1,56 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import BookCard from '../../components/BookCard.astro';
+import Yuwei from '../../components/Yuwei.astro';
+import { getPublishedBooks, groupBooksByTheme } from '../../lib/books';
+
+export async function getStaticPaths() {
+  const books = await getPublishedBooks();
+  const byTheme = groupBooksByTheme(books);
+
+  return [...byTheme.entries()].map(([theme, themeBooks]) => ({
+    params: { theme },
+    props: {
+      theme,
+      books: themeBooks,
+    },
+  }));
+}
+
+const { theme, books } = Astro.props;
+---
+
+<BaseLayout title={`主题 · ${theme}`} category={`主题 · ${theme}`}>
+  <article class="theme-page">
+    <header class="head">
+      <p class="eyebrow">按主题浏览</p>
+      <h1>{theme}</h1>
+    </header>
+
+    <Yuwei />
+
+    <section class="list">
+      {books.map((book) => <BookCard book={book} />)}
+    </section>
+  </article>
+</BaseLayout>
+
+<style>
+  .theme-page { max-width: 720px; margin: 0 auto; }
+  .head { text-align: center; padding: 1.5rem 0 0.5rem; }
+  .eyebrow {
+    font-size: 0.75rem;
+    letter-spacing: 0.3em;
+    color: var(--ink-soft);
+    margin: 0 0 0.6rem;
+    text-transform: uppercase;
+  }
+  h1 {
+    font-family: var(--font-cn-brush);
+    font-weight: 400;
+    font-size: 2.4rem;
+    margin: 0;
+    color: var(--ink);
+    letter-spacing: 0.1em;
+  }
+</style>

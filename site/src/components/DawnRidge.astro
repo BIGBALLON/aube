@@ -1,0 +1,80 @@
+---
+/**
+ * 破晓远山 · 首页 hero 的视觉锚点
+ * 层叠三重远山 + 顶部朝霞色带 + 一轮将出未出的破晓日。
+ * 纯 SVG，任意缩放不糊；opacity 调得很轻，不喧宾夺主。
+ */
+---
+
+<div class="dawn-ridge" aria-hidden="true">
+  <svg viewBox="0 0 1200 320" preserveAspectRatio="xMidYMax meet">
+    <defs>
+      <!-- 朝霞色带（hero 顶部） -->
+      <linearGradient id="dawn-sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#F7F2E8" stop-opacity="0"/>
+        <stop offset="55%" stop-color="#F2C8A0" stop-opacity="0.22"/>
+        <stop offset="80%" stop-color="#C14A3A" stop-opacity="0.14"/>
+        <stop offset="100%" stop-color="#C14A3A" stop-opacity="0.04"/>
+      </linearGradient>
+      <linearGradient id="sun-glow" x1="0.5" y1="0" x2="0.5" y2="1">
+        <stop offset="0%" stop-color="#F2C8A0" stop-opacity="0.8"/>
+        <stop offset="100%" stop-color="#C14A3A" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+
+    <!-- 朝霞色带 -->
+    <rect x="0" y="0" width="1200" height="220" fill="url(#dawn-sky)" />
+
+    <!-- 一轮将出未出的破晓日 -->
+    <g transform="translate(820, 188)">
+      <circle r="70" fill="url(#sun-glow)" />
+      <circle r="28" fill="#C14A3A" fill-opacity="0.22"/>
+      <circle r="14" fill="#C14A3A" fill-opacity="0.4"/>
+    </g>
+
+    <!-- 最远的那层山（最淡） -->
+    <path
+      d="M0 250 L80 220 L160 232 L240 208 L340 224 L420 200 L520 218 L620 198 L740 216 L840 196 L960 214 L1080 200 L1200 222 L1200 320 L0 320 Z"
+      fill="#6B8E7F" fill-opacity="0.10"
+    />
+
+    <!-- 中层山 -->
+    <path
+      d="M0 272 L100 246 L200 264 L300 238 L420 260 L540 232 L680 258 L820 230 L960 254 L1100 234 L1200 250 L1200 320 L0 320 Z"
+      fill="#6B8E7F" fill-opacity="0.18"
+    />
+
+    <!-- 近层山（最深） -->
+    <path
+      d="M0 298 L140 278 L260 292 L380 270 L520 290 L660 268 L820 288 L980 270 L1120 286 L1200 280 L1200 320 L0 320 Z"
+      fill="#1E1B18" fill-opacity="0.10"
+    />
+
+    <!-- 近景鸟影 -->
+    <path
+      d="M220 160 q 8 -6 16 0 q 8 -6 16 0"
+      stroke="#1E1B18" stroke-width="1" stroke-opacity="0.25"
+      fill="none" stroke-linecap="round"
+    />
+    <!-- 远景第二只，更小更淡，造景深 -->
+    <path
+      d="M700 130 q 6 -4 12 0 q 6 -4 12 0"
+      stroke="#1E1B18" stroke-width="0.9" stroke-opacity="0.18"
+      fill="none" stroke-linecap="round"
+    />
+  </svg>
+</div>
+
+<style>
+  .dawn-ridge {
+    position: relative;
+    width: 100%;
+    line-height: 0;
+    pointer-events: none;
+  }
+  .dawn-ridge svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+</style>

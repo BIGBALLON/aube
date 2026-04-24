@@ -1,0 +1,344 @@
+@import "tailwindcss";
+
+/* 字体 CSS 在 BaseLayout.astro 以 JS import 方式引入
+   （CSS @import 方式 Vite 不会 resolve node_modules url()，会导致字体 404） */
+
+/* aube · 宣纸晨曦 · CSS variables */
+
+@theme {
+  --color-bg: #F7F2E8;
+  --color-bg-soft: #FAF6EC;
+  --color-ink: #1E1B18;
+  --color-ink-soft: #6B6357;
+  --color-dawn: #C14A3A;
+  --color-mist: #6B8E7F;
+  --color-gold: #A68B3E;
+  --color-line: #D6CFBF;
+}
+
+:root {
+  --bg:           #F7F2E8;
+  --bg-soft:      #FAF6EC;
+  --ink:          #1E1B18;
+  --ink-soft:     #6B6357;
+  --accent-dawn:  #C14A3A;
+  --accent-mist:  #6B8E7F;
+  --gold:         #A68B3E;
+  --line:         #D6CFBF;
+
+  /* 字体栈 · 全楷调
+     brush  → 毛笔楷（Ma Shan Zheng）· 只用在超大标题 / 书名 / hero
+     title  → LXGW WenKai · 中号标题、书卡标题、section 小标
+     body   → LXGW WenKai · 正文
+     kai    → 同 body（引文、Aube 反应等需要诗感的地方） */
+  --font-cn-brush: "Ma Shan Zheng", "KaiTi", "STKaiti", serif;
+  --font-cn-title: "LXGW WenKai", "KaiTi", "STKaiti", serif;
+  --font-cn-body:  "LXGW WenKai", "KaiTi", "STKaiti", serif;
+  --font-cn-kai:   "LXGW WenKai", "KaiTi", "STKaiti", serif;
+  --font-en:       "EB Garamond Variable", "EB Garamond", "Garamond", Georgia, serif;
+  --font-en-decor: "EB Garamond Variable", "Garamond", Georgia, serif;
+
+  /* EB Garamond 的高级 OpenType 特性 */
+  --en-features: "kern" 1, "liga" 1, "onum" 1, "dlig" 1;
+}
+
+/* 页面基底 */
+html {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-cn-body);
+  font-size: 17px;
+  line-height: 1.85;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "kern" 1, "liga" 1;
+  hanging-punctuation: first last;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  /* 纸色极缓渐变 */
+  background:
+    linear-gradient(180deg, var(--bg) 0%, var(--bg-soft) 100%),
+    var(--bg);
+  color: var(--ink);
+  position: relative;
+}
+
+@media (min-width: 768px) {
+  body {
+    background-attachment: fixed;
+  }
+}
+
+/* 笺谱纹背景 · 极淡重复花纹（SVG data URI，无外部依赖） */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.35;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'><g fill='none' stroke='%236B6357' stroke-width='0.35' stroke-opacity='0.09'><circle cx='60' cy='60' r='28'/><circle cx='60' cy='60' r='18' stroke-dasharray='1 3'/><path d='M32 60 L88 60 M60 32 L60 88' stroke-opacity='0.05'/></g><g fill='%23C14A3A' fill-opacity='0.03'><circle cx='60' cy='60' r='1.5'/></g></svg>");
+  background-size: 120px 120px;
+}
+
+/* 保证内容在笺纹之上 */
+.page { position: relative; z-index: 1; }
+
+/* 英文 · EB Garamond 与 old-style 数字 */
+.en {
+  font-family: var(--font-en);
+  font-feature-settings: var(--en-features);
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+}
+.serif-en {
+  font-family: var(--font-en);
+  font-feature-settings: var(--en-features);
+}
+
+.nums {
+  font-family: var(--font-en);
+  font-feature-settings: "onum" 1, "tnum" 0, "lnum" 0;
+  font-variant-numeric: oldstyle-nums;
+}
+
+/* 链接：克制的 hover。
+   全局 a:hover 只变色不加下划线——避免 BookCard 这种"整块是链接"的容器
+   在 hover 时把封面 alt / 作者 / 标签通通划线。
+   行内链接的识别下划线只在 .prose 里给出（见下方）。 */
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 180ms ease;
+}
+a:hover {
+  color: var(--accent-dawn);
+}
+
+/* 长文排版 · prose */
+.prose {
+  max-width: 680px;
+  color: var(--ink);
+  font-size: 17px;
+  line-height: 1.9;
+  orphans: 3;
+  widows: 3;
+}
+
+.prose > * + * { margin-top: 1.1em; }
+.prose p { margin: 1em 0; }
+
+.prose h1,
+.prose h2,
+.prose h3 {
+  font-family: var(--font-cn-title);
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: 0.04em;
+}
+.prose h1 { font-size: 2rem; margin: 2em 0 0.8em; line-height: 1.35; }
+.prose h2 {
+  font-size: 1.45rem;
+  margin: 2.4em 0 0.6em;
+  line-height: 1.4;
+  position: relative;
+  padding-left: 0.9em;
+}
+/* H2 前的 5px 朱红小方印 */
+.prose h2::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.58em;
+  width: 5px;
+  height: 5px;
+  background: var(--accent-dawn);
+  box-shadow: 0 0 0 0.5px rgba(193, 74, 58, 0.4);
+  transform: rotate(45deg);
+}
+.prose h3 {
+  font-size: 1.15rem;
+  margin: 1.8em 0 0.4em;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  letter-spacing: 0.08em;
+}
+
+.prose strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+.prose em {
+  font-style: italic;
+  color: var(--ink-soft);
+  font-family: var(--font-en), var(--font-cn-body);
+}
+
+/* 引文：左侧朱线 + 首字开引号 */
+.prose blockquote {
+  margin: 1.8em 0;
+  padding: 0.2em 0 0.2em 1.4em;
+  border-left: 2px solid var(--accent-mist);
+  color: var(--ink-soft);
+  font-style: italic;
+  position: relative;
+}
+.prose blockquote::before {
+  content: "「";
+  position: absolute;
+  left: -0.1em;
+  top: -0.3em;
+  color: var(--accent-dawn);
+  opacity: 0.35;
+  font-size: 2.4em;
+  line-height: 1;
+  font-family: var(--font-cn-title);
+  pointer-events: none;
+}
+
+/* prose 内行内链接：永久一条极淡下划线，
+   hover 时颜色 + 下划线色同时过渡到朱红 */
+.prose a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-decoration-thickness: 0.05em;
+  text-underline-offset: 0.25em;
+  transition: color 180ms ease, text-decoration-color 180ms ease;
+}
+.prose a:hover {
+  color: var(--accent-dawn);
+  text-decoration-color: var(--accent-dawn);
+}
+
+.prose ul, .prose ol {
+  padding-left: 1.5em;
+}
+.prose li { margin: 0.35em 0; }
+.prose ul li::marker { color: var(--accent-mist); }
+.prose ol li::marker {
+  color: var(--accent-mist);
+  font-family: var(--font-en);
+  font-feature-settings: "onum" 1;
+}
+
+.prose hr {
+  border: 0;
+  height: 1px;
+  background: var(--line);
+  margin: 2.4em auto;
+  width: 40%;
+}
+
+.prose code {
+  font-family: "Menlo", "Consolas", monospace;
+  font-size: 0.9em;
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  padding: 0.05em 0.4em;
+  border-radius: 2px;
+}
+
+/* 首字下沉 · 只在专门标记的段落上用 */
+.prose .dropcap::first-letter,
+.prose p.dropcap::first-letter {
+  float: left;
+  font-family: var(--font-cn-brush);
+  font-weight: 400;
+  font-size: 3.8em;
+  line-height: 0.88;
+  padding: 0.05em 0.2em 0.04em 0;
+  color: var(--accent-dawn);
+  letter-spacing: 0;
+}
+
+/* 书眉 · 页顶老书书眉 */
+.book-mei {
+  font-family: var(--font-cn-title);
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  color: var(--ink-soft);
+}
+.book-mei .sep {
+  margin: 0 0.5em;
+  color: var(--accent-dawn);
+  opacity: 0.6;
+}
+
+/* aube wordmark */
+.wordmark {
+  font-family: var(--font-en);
+  font-feature-settings: var(--en-features);
+  font-weight: 500;
+  font-style: italic;
+  letter-spacing: 0.06em;
+  color: var(--ink);
+}
+
+/* tag / pill */
+.tag {
+  display: inline-block;
+  font-family: var(--font-cn-title);
+  font-size: 0.78rem;
+  padding: 0.15em 0.75em;
+  border: 1px solid var(--accent-mist);
+  color: var(--accent-mist);
+  border-radius: 1em;
+  letter-spacing: 0.08em;
+  line-height: 1.6;
+  background: transparent;
+  transition: background 180ms ease, color 180ms ease;
+}
+.tag:hover {
+  background: var(--accent-mist);
+  color: var(--bg);
+}
+
+/* verdict 徽章 */
+.verdict {
+  display: inline-block;
+  font-family: var(--font-cn-title);
+  font-size: 0.82rem;
+  padding: 0.18em 0.9em;
+  border-radius: 2px;
+  letter-spacing: 0.12em;
+  font-weight: 500;
+}
+.verdict-yes {
+  background: rgba(193, 74, 58, 0.08);
+  color: var(--accent-dawn);
+  border: 1px solid rgba(193, 74, 58, 0.3);
+}
+.verdict-maybe {
+  background: rgba(107, 142, 127, 0.08);
+  color: var(--accent-mist);
+  border: 1px solid rgba(107, 142, 127, 0.3);
+}
+.verdict-no {
+  background: rgba(107, 99, 87, 0.08);
+  color: var(--ink-soft);
+  border: 1px solid rgba(107, 99, 87, 0.3);
+}
+
+/* 小屏幕字号 */
+@media (max-width: 640px) {
+  html { font-size: 16px; }
+  .prose { font-size: 16px; }
+  .prose h1 { font-size: 1.65rem; }
+  .prose h2 { font-size: 1.25rem; }
+}
+
+/* 选中态 */
+::selection {
+  background: rgba(193, 74, 58, 0.22);
+  color: var(--ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}

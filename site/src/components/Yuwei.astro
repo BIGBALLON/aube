@@ -1,0 +1,58 @@
+---
+/**
+ * 鱼尾 · 老书版心装饰
+ * 黑白双鱼尾对望 + 中心朱红小菱 + 两侧细细衰减线。
+ */
+interface Props {
+  class?: string;
+  width?: number;
+}
+const { class: className = '', width = 132 } = Astro.props;
+---
+
+<div class={`yuwei ${className}`} aria-hidden="true">
+  <svg viewBox="0 0 160 28" width={width} height={width * 0.175} fill="none">
+    <defs>
+      <!-- 墨色发散（老书刻版的"发墨"感） -->
+      <filter id="ink-blur" x="-10%" y="-10%" width="120%" height="120%">
+        <feGaussianBlur stdDeviation="0.18"/>
+      </filter>
+    </defs>
+
+    <!-- 左延伸线（左端渐隐） -->
+    <line x1="2"   y1="14" x2="48" y2="14" stroke="var(--line)" stroke-width="0.8" stroke-linecap="round"/>
+    <line x1="42"  y1="14" x2="56" y2="14" stroke="var(--ink-soft)" stroke-width="0.9" stroke-opacity="0.4" stroke-linecap="round"/>
+
+    <!-- 左鱼尾（阴刻 · 三层叠加做出刻版发墨感） -->
+    <g filter="url(#ink-blur)">
+      <path d="M56 5 L72 14 L56 23 L62 14 Z" fill="var(--ink)" fill-opacity="0.7"/>
+    </g>
+    <path d="M56 5.5 L71.4 14 L56 22.5 L62 14 Z" fill="var(--ink)" fill-opacity="0.88"/>
+
+    <!-- 中心朱红小菱（可看作"鱼眼"） -->
+    <g filter="url(#ink-blur)">
+      <path d="M80 9 L85 14 L80 19 L75 14 Z" fill="var(--accent-dawn)" fill-opacity="0.5"/>
+    </g>
+    <path d="M80 9.5 L84.5 14 L80 18.5 L75.5 14 Z" fill="var(--accent-dawn)" fill-opacity="0.9"/>
+
+    <!-- 右鱼尾（阴刻 · 对称） -->
+    <g filter="url(#ink-blur)">
+      <path d="M104 5 L88 14 L104 23 L98 14 Z" fill="var(--ink)" fill-opacity="0.7"/>
+    </g>
+    <path d="M104 5.5 L88.6 14 L104 22.5 L98 14 Z" fill="var(--ink)" fill-opacity="0.88"/>
+
+    <!-- 右延伸线 -->
+    <line x1="104" y1="14" x2="118" y2="14" stroke="var(--ink-soft)" stroke-width="0.9" stroke-opacity="0.4" stroke-linecap="round"/>
+    <line x1="112" y1="14" x2="158" y2="14" stroke="var(--line)" stroke-width="0.8" stroke-linecap="round"/>
+  </svg>
+</div>
+
+<style>
+  .yuwei {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 2.4rem 0;
+    line-height: 0;
+  }
+</style>

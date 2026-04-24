@@ -1,0 +1,201 @@
+---
+/**
+ * 8 维度雷达图 · child-first
+ */
+interface Scores {
+  fun: number;
+  art: number;
+  story: number;
+  knowledge: number;
+  discuss: number;
+  inspire: number;
+  values: number;
+  reread: number;
+}
+
+interface Props {
+  scores: Scores;
+  size?: number;
+  id?: string;
+}
+
+const { scores, size = 420, id = 'radar-chart' } = Astro.props;
+const uid = id.replace(/[^a-zA-Z0-9_-]/g, '-');
+const fillId = `${uid}-fill`;
+const pointHaloId = `${uid}-point-halo`;
+
+const order: (keyof Scores)[] = [
+  'fun', 'art', 'story', 'knowledge', 'discuss', 'inspire', 'values', 'reread'
+];
+const labels: Record<keyof Scores, string> = {
+  fun: '趣味',
+  art: '画面',
+  story: '故事',
+  knowledge: '知识',
+  discuss: '共读',
+  inspire: '启发',
+  values: '价值观',
+  reread: '耐读',
+};
+
+const cx = 220, cy = 220, r = 140, max = 5;
+const n = order.length;
+
+const angleOf = (i: number) => (Math.PI * 2 * i) / n - Math.PI / 2;
+
+const points = order.map((k, i) => {
+  const v = scores[k];
+  const a = angleOf(i);
+  const x = cx + (r * v / max) * Math.cos(a);
+  const y = cy + (r * v / max) * Math.sin(a);
+  return `${x.toFixed(2)},${y.toFixed(2)}`;
+}).join(' ');
+
+const axes = order.map((_, i) => {
+  const a = angleOf(i);
+  return {
+    x: cx + r * Math.cos(a),
+    y: cy + r * Math.sin(a),
+  };
+});
+
+const labelPoints = order.map((k, i) => {
+  const a = angleOf(i);
+  const dist = r + 32;
+  return {
+    x: cx + dist * Math.cos(a),
+    y: cy + dist * Math.sin(a),
+    label: labels[k],
+    value: scores[k],
+    angle: a,
+  };
+});
+
+const dataPoints = order.map((k, i) => {
+  const v = scores[k];
+  const a = angleOf(i);
+  return {
+    x: cx + (r * v / max) * Math.cos(a),
+    y: cy + (r * v / max) * Math.sin(a),
+  };
+});
+
+// 5 层网格多边形；最外层实线，内层细虚
+const gridLevels = [1, 2, 3, 4, 5];
+---
+
+<div class="radar-wrap">
+  <svg viewBox="0 0 440 440" width={size} height={size} class="radar" role="img" aria-label="8 维度评分雷达图">
+    <defs>
+      <!-- 数据多边形：中心深 → 边缘淡 -->
+      <radialGradient id={fillId} cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#C14A3A" stop-opacity="0.32"/>
+        <stop offset="60%" stop-color="#C14A3A" stop-opacity="0.18"/>
+        <stop offset="100%" stop-color="#C14A3A" stop-opacity="0.06"/>
+      </radialGradient>
+      <!-- 数据点外圈淡晕 -->
+      <radialGradient id={pointHaloId} cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#C14A3A" stop-opacity="0.35"/>
+        <stop offset="100%" stop-color="#C14A3A" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+
+    <!-- 网格多边形 · 5 层 -->
+    {gridLevels.map((lvl) => {
+      const grid = order.map((_, i) => {
+        const a = angleOf(i);
+        const x = cx + (r * lvl / max) * Math.cos(a);
+        const y = cy + (r * lvl / max) * Math.sin(a);
+        return `${x.toFixed(2)},${y.toFixed(2)}`;
+      }).join(' ');
+      const isOuter = lvl === 5;
+      return (
+        <polygon
+          points={grid}
+          fill="none"
+          stroke="var(--line)"
+          stroke-width={isOuter ? 0.9 : 0.4}
+          stroke-dasharray={isOuter ? undefined : '2 3'}
+          opacity={isOuter ? 0.9 : 0.55}
+        />
+      );
+    })}
+
+    <!-- 轴线 -->
+    {axes.map((p) => (
+      <line
+        x1={cx} y1={cy} x2={p.x} y2={p.y}
+        stroke="var(--line)"
+        stroke-width="0.4"
+        opacity="0.7"
+      />
+    ))}
+
+    <!-- 数据多边形：渐变填充 + 细描边 -->
+    <polygon
+      points={points}
+      fill={`url(#${fillId})`}
+      stroke="var(--accent-dawn)"
+      stroke-width="1.4"
+      stroke-linejoin="round"
+      opacity="0.92"
+    />
+
+    <!-- 数据点：外圈淡晕 + 内圈实点 -->
+    {dataPoints.map((p) => (
+      <>
+        <circle cx={p.x} cy={p.y} r="8" fill={`url(#${pointHaloId})`}/>
+        <circle cx={p.x} cy={p.y} r="2.8" fill="var(--accent-dawn)"/>
+        <circle cx={p.x} cy={p.y} r="1.1" fill="#F7F2E8"/>
+      </>
+    ))}
+
+    <!-- 中心朱点 -->
+    <circle cx={cx} cy={cy} r="1.8" fill="var(--accent-dawn)" fill-opacity="0.55"/>
+
+    <!-- 标签：中文 + old-style 数字 -->
+    {labelPoints.map(({ x, y, label, value }) => (
+      <g>
+        <text
+          x={x}
+          y={y - 1}
+          text-anchor="middle"
+          class="radar-label"
+        >{label}</text>
+        <text
+          x={x}
+          y={y + 14}
+          text-anchor="middle"
+          class="radar-value"
+        >{`${value} / 5`}</text>
+      </g>
+    ))}
+  </svg>
+</div>
+
+<style>
+  .radar-wrap {
+    display: flex;
+    justify-content: center;
+    margin: 0.4rem auto;
+  }
+  .radar {
+    display: block;
+    filter: drop-shadow(0 2px 12px rgba(193, 74, 58, 0.05));
+  }
+  .radar-label {
+    font-size: 13px;
+    fill: var(--ink);
+    font-family: var(--font-cn-title);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+  }
+  .radar-value {
+    font-size: 10.5px;
+    fill: var(--ink-soft);
+    font-family: var(--font-en), serif;
+    font-feature-settings: "onum" 1;
+    letter-spacing: 0.04em;
+    font-style: italic;
+  }
+</style>
